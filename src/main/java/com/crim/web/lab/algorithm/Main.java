@@ -1,4 +1,4 @@
-package com.crim.web.lab;
+package com.crim.web.lab.algorithm;
 
 
 public class Main {
