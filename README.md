@@ -6,48 +6,6 @@
 
 
 
-# 技术原理
-
-
-
-### 数据结构
-
-- 数组/列表
-
-- 字符串
-
-  字符串应视为数组的一种形式，其操作的时间复杂度与数组相同
-
-- 哈希表
-
-### 算法
-
-- 二分查找 O(logn)
-
-  常与排序共用时为 O(nlogn)
-
-- 动态规划
-
-- 贪心
-
-### 技巧
-
-- 空间换时间
-
-  构造更多的数据结构以降低时间复杂度
-
-- 双指针 O(n)
-
-  常与排序共用时为 O(nlogn)
-
-- 滑动窗口 O(n)
-
-  常用于处理数组/列表等线性数据结构的关于局部数据的问题
-
-
-
-
-
 # LeetCode
 
 
@@ -567,6 +525,160 @@ class CorrectSolution {
 
 
 
+## 11. 盛最多水的容器 Container With Most Water
+
+
+
+### 题目
+
+[中等](https://leetcode.cn/problems/container-with-most-water/)
+
+> 给定一个长度为 `n` 的整数数组 `height` 。有 `n` 条垂线，第 `i` 条线的两个端点是 `(i, 0)` 和 `(i, height[i])` 。
+>
+> 找出其中的两条线，使得它们与 `x` 轴共同构成的容器可以容纳最多的水。
+>
+> 返回容器可以储存的最大水量。
+>
+> **说明：**你不能倾斜容器。
+>
+> **示例 1：**
+>
+> ![img](https://aliyun-lc-upload.oss-cn-hangzhou.aliyuncs.com/aliyun-lc-upload/uploads/2018/07/25/question_11.jpg)
+>
+> ```
+> 输入：[1,8,6,2,5,4,8,3,7]
+> 输出：49 
+> 解释：图中垂直线代表输入数组 [1,8,6,2,5,4,8,3,7]。在此情况下，容器能够容纳水（表示为蓝色部分）的最大值为 49。
+> ```
+>
+> **示例 2：**
+>
+> ```
+> 输入：height = [1,1]
+> 输出：1
+> ```
+>
+> **提示：**
+>
+> - `n == height.length`
+> - `2 <= n <= 105`
+> - `0 <= height[i] <= 104`
+>
+> ------
+>
+> 通过次数 1,829,426/3M
+>
+> 通过率 61.5%
+
+
+
+### 思路
+
+1. 双指针
+
+   通过 `max` 记录当前已知的最大容器面积
+
+   对于数组的局部从 n<sub>i</sub> 到 n<sub>j</sub> （i < j），如果 n<sub>i</sub> < n<sub>j</sub>，使 i 递增直到 p，使得 n<sub>p</sub> > n<sub>i</sub> 且 p < (i + j)/2
+
+   因为任取 n<sub>m</sub> 使得 i < m < p 都有 n<sub>m</sub> < n<sub>i</sub> < n<sub>p</sub> ，因此面积 S<sub>mj</sub> < S<sub>ij</sub> <= max
+
+   此时计算面积 S<sub>pj</sub> 并与 max 进行比较或更新
+
+   对于剩余的局部数组从 n<sub>p</sub> 到 n<sub>j</sub> ，重复执行上述操作
+
+   ```
+             |                          
+             |                          
+     |       |                         |
+     |   |   |                         |
+     |   |   |                         |
+     i   m   p                         j
+   ```
+
+   可以证明任取 m, q 使得 i < m < q < j 面积 S<sub>mq</sub> < S<sub>ij</sub> <= max
+
+   解决当移动 p 使得 p >= (i + j)/2 的问题
+
+   ```
+                             |        
+                             |       | 
+     |                       |       |
+     |   |                   |       |
+     |   |                   |       |
+     i   m                   p       j
+   ```
+
+   由于任取 n<sub>m</sub> 使得 i < m < p 都有 n<sub>m</sub> < n<sub>i</sub> < n<sub>p</sub> ，面积 S<sub>mj</sub> < S<sub>ij</sub> <= max
+
+   且仍保证任取 m, q 使得 i < m < q < j 面积 S<sub>mq</sub> < S<sub>ij</sub> <= max
+
+   那么仅需多计算 S<sub>ip</sub> 并于 max 进行比较或更新
+
+   总结：
+
+   对于局部数组 i 到 j，总能使 max = f<sub>max</sub> ( S<sub>ij</sub> , max<sub>0</sub> ) 直到找到 p 使得 i < p < j ，n<sub>i</sub> < n<sub>p</sub> （在 n<sub>i</sub> <= n<sub>j</sub> 时），并在对局部数据 p 到 j 进行重复性的操作
+
+
+
+### 双指针
+
+#### 代码
+
+```java
+class Solution {
+    public int maxArea(int[] height) {
+        if (height.length < 2) return 0;
+        int i = 0;
+        int j = height.length - 1;
+        int p = height[i] <= height[j] ? i : j;
+        int max = calArea(i, j, height);
+        while (i < j) {
+            if (height[i] <= height[j]) {
+                if (height[p] <= height[i]) {
+                    p++;
+                    if (p >= j) break;
+                    continue;
+                }
+                int area_ip = calArea(i, p, height);
+                int area_pj = calArea(p, j, height);
+                int currentMax = Math.max(area_ip, area_pj);
+                max = Math.max(max, currentMax);
+                i = p;
+                p = height[i] <= height[j] ? i : j;
+            }
+            else {
+                if (height[p] <= height[j]) {
+                    p--;
+                    if (p <= i) break;
+                    continue;
+                }
+                int area_ip = calArea(i, p, height);
+                int area_pj = calArea(p, j, height);
+                int currentMax = Math.max(area_ip, area_pj);
+                max = Math.max(max, currentMax);
+                j = p;
+                p = height[i] <= height[j] ? i : j;
+            }
+        }
+        return max;
+    }
+    
+    private int calArea(int a, int b, int[] height) {
+        return Math.min(height[a], height[b]) * (b - a);
+    }
+}
+```
+
+#### 结果
+
+通过
+
+用时3ms，击败94.48%
+
+
+
+
+
 ## 49. 字母异位词分组 Group Anagrams
 
 
@@ -839,3 +951,45 @@ class Solution {
 通过
 
 用时21ms，击败89.90%
+
+
+
+
+
+# 技术原理
+
+
+
+### 数据结构
+
+- 数组/列表
+
+- 字符串
+
+  字符串应视为数组的一种形式，其操作的时间复杂度与数组相同
+
+- 哈希表
+
+### 算法
+
+- 二分查找 O(logn)
+
+  常与排序共用时为 O(nlogn)
+
+- 动态规划
+
+- 贪心
+
+### 技巧
+
+- 空间换时间
+
+  构造更多的数据结构以降低时间复杂度
+
+- 双指针 O(n)
+
+  常与排序共用时为 O(nlogn)
+
+- 滑动窗口 O(n)
+
+  常用于处理数组/列表等线性数据结构的关于局部数据的问题
