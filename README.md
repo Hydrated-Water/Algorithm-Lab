@@ -60,6 +60,8 @@
 
 ### 题目
 
+[简单](https://leetcode.cn/problems/two-sum/description/)
+
 > 给定一个整数数组 `nums` 和一个整数目标值 `target`，请你在该数组中找出 **和为目标值** *`target`* 的那 **两个** 整数，并返回它们的数组下标。
 >
 > 你可以假设每种输入只会对应一个答案，并且你不能使用两次相同的元素。
@@ -372,6 +374,8 @@ public class AdvancedSolution4 {
 
 ### 题目
 
+[中等](https://leetcode.cn/problems/longest-substring-without-repeating-characters/description/)
+
 > 给定一个字符串 `s` ，请你找出其中不含有重复字符的 **最长 子串** 的长度。
 >
 > **示例 1:**
@@ -414,7 +418,7 @@ public class AdvancedSolution4 {
 
 ### 思路
 
-1. 哈希表法
+1. 哈希表
 
    为了保证无重复字符串，对于长度为`n`的字符串`str`中的任意字符 c<sub>j</sub> ，必定存在某种方式获取到 c<sub>i</sub> 使得 c<sub>i</sub> = c<sub>j</sub> 且 i < j
 
@@ -558,3 +562,179 @@ class CorrectSolution {
 #### 分析
 
 大道至简
+
+
+
+
+
+## 49. 字母异位词分组 Group Anagrams
+
+
+
+### 题目
+
+[中等](https://leetcode.cn/problems/group-anagrams/description)
+
+> 给你一个字符串数组，请你将 字母异位词 组合在一起。可以按任意顺序返回结果列表。
+>
+> **示例 1:**
+>
+> **输入:** strs = ["eat", "tea", "tan", "ate", "nat", "bat"]
+>
+> **输出:** [["bat"],["nat","tan"],["ate","eat","tea"]]
+>
+> **解释：**
+>
+> - 在 strs 中没有字符串可以通过重新排列来形成 `"bat"`。
+> - 字符串 `"nat"` 和 `"tan"` 是字母异位词，因为它们可以重新排列以形成彼此。
+> - 字符串 `"ate"` ，`"eat"` 和 `"tea"` 是字母异位词，因为它们可以重新排列以形成彼此。
+>
+> **示例 2:**
+>
+> **输入:** strs = [""]
+>
+> **输出:** [[""]]
+>
+> **示例 3:**
+>
+> **输入:** strs = ["a"]
+>
+> **输出:** [["a"]]
+>
+> **提示：**
+>
+> - `1 <= strs.length <= 104`
+> - `0 <= strs[i].length <= 100`
+> - `strs[i]` 仅包含小写字母
+>
+> ------
+>
+> 通过次数 1,232,715/1.8M
+>
+> 通过率 69.9%
+
+
+
+### 思路
+
+1. 哈希表
+
+   `strs[i]` 仅包含小写字母且长度为0到100
+
+   对于每一个`s = strs[i]`，都可以计算`s`的每一个字母的出现次数，并以此作为哈希，使得`s`被正确的分组
+
+   因此需要一种方式计算`s`的哈希以快速地基于每一个字母的出现次数区分开来
+
+   考虑使用哈希表存储，以某种对象为键，以存储被分组的`s`的列表为值，那么作为键的对象必须通过每个字母出现的次数，存储并区别于其他对象
+
+   为了确保性能，该对象还应该高效的生成并区别于其他对象的哈希值
+
+   预估时间复杂度为 O(mn) ，其中`n`为`strs`的元素数量，`m`为字符串平均长度
+
+
+
+### 哈希表
+
+#### 代码
+
+```java
+class Solution {
+    public List<List<String>> groupAnagrams(String[] strs) {
+        // 使用哈希表存储和查找，以每个字母出现次数为键，以存储被分组的字符串列表为值
+        HashMap<List<Integer>, List<String>> map = new HashMap<>();
+        for (String str : strs) {
+            List<Integer> letterCount = this.getLetterCount(str);
+            List<String> container = map.get(letterCount);
+            if (container == null) {
+                container = new ArrayList<>();
+                map.put(letterCount, container);
+            }
+            container.add(str);
+        }
+        return map.values().stream().toList();
+    }
+    
+    // 计算字符串中每个小写字母的出现次数
+    private List<Integer> getLetterCount(String s) {
+        int[] letterCount = new int[26];
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            letterCount[c - 'a']++;
+        }
+        List<Integer> list = new ArrayList<>(letterCount.length);
+        for (int count : letterCount) {
+            list.add(count);
+        }
+        return list;
+    }
+}
+```
+
+#### 结果
+
+通过
+
+用时11ms，击败19.47%
+
+### 分析
+
+注意到虽然时间复杂度理论上已经最优，但用时和内存占用仍不理想，考虑这是键的设计不良导致
+
+使用更好的方式设计键，如String、包装数组、大整数等
+
+
+
+
+
+## 128. 最长连续序列 Longest Consecutive Sequence
+
+
+
+### 题目
+
+[中等](https://leetcode.com/problems/longest-consecutive-sequence/)
+
+> 给定一个未排序的整数数组 `nums` ，找出数字连续的最长序列（不要求序列元素在原数组中连续）的长度。
+>
+> 请你设计并实现时间复杂度为 `O(n)` 的算法解决此问题。
+>
+> **示例 1：**
+>
+> ```
+> 输入：nums = [100,4,200,1,3,2]
+> 输出：4
+> 解释：最长数字连续序列是 [1, 2, 3, 4]。它的长度为 4。
+> ```
+>
+> **示例 2：**
+>
+> ```
+> 输入：nums = [0,3,7,2,5,8,4,6,0,1]
+> 输出：9
+> ```
+>
+> **示例 3：**
+>
+> ```
+> 输入：nums = [1,0,1,2]
+> 输出：3
+> ```
+>
+> **提示：**
+>
+> - `0 <= nums.length <= 105`
+> - `-109 <= nums[i] <= 109`
+>
+> ------
+>
+> 通过次数 1,182,539/2.4M
+>
+> 通过率 49.7%
+
+
+
+### 思路
+
+1. 哈希表
+
+   为了保证时间复杂度为 O(n) ，不应对数组进行排序，另外由题可知数组元素值范围很大，也不应使用bitmap
