@@ -738,3 +738,104 @@ class Solution {
 1. 哈希表
 
    为了保证时间复杂度为 O(n) ，不应对数组进行排序，另外由题可知数组元素值范围很大，也不应使用bitmap
+
+   因此可以考虑使用哈希表，哈希表插入一个元素和取出一个元素的时间复杂度均为 O(1) 
+
+   那么对原数组进行遍历并构建哈希表，然后反复对哈希表进行如下操作：
+
+   1. 检查哈希表的一个元素`i`，并从哈希表中寻找并移除`i`的前后连续值的所有元素
+   2. 统计最长连续序列
+   3. 如果哈希表不为空，那么重新执行1操作
+
+
+
+### 哈希表
+
+#### 代码1
+
+```java
+class Solution {
+    public int longestConsecutive(int[] nums) {
+        int result = 0;
+        HashSet<Integer> set = new HashSet<>(nums.length * 2);
+        for (int i : nums) {
+            set.add(i);
+        }
+        while (true) {
+            Iterator<Integer> iterator = set.iterator();
+            if (!iterator.hasNext()) break;
+            int i = iterator.next();
+            set.remove(i);
+            int len = 1;
+            int n = i;
+            while (true) {
+                if (n == Integer.MAX_VALUE) break;
+                n++;
+                if (set.remove(n)) len++;
+                else break;
+            }
+            n = i;
+            while (true) {
+                if (n == Integer.MIN_VALUE) break;
+                n--;
+                if (set.remove(n)) len++;
+                else break;
+            }
+            result = Math.max(result, len);
+        }
+        return result;
+    }
+}
+```
+
+#### 结果1
+
+超时
+
+#### 分析1
+
+经过仔细的测试后发现，重复创建迭代器是性能影响最大的因素
+
+为什么迭代器性能影响如此之大尚未得知，但可以知道的是除了反射暂无别的手段高效地从哈希表中任取一个元素
+
+#### 代码2
+
+```java
+class Solution {
+    public int longestConsecutive(int[] nums) {
+        int result = 0;
+        HashSet<Integer> set = new HashSet<>(nums.length * 2);
+        for (int i : nums) {
+            set.add(i);
+        }
+        for (int c = 0; c < nums.length; c++) {
+            int i = nums[c];
+            if (!set.remove(i)) continue;
+            
+            int len = 1;
+            int n = i;
+            while (true) {
+                if (n == Integer.MAX_VALUE) break;
+                n++;
+                if (set.remove(n)) len++;
+                else break;
+            }
+            n = i;
+            while (true) {
+                if (n == Integer.MIN_VALUE) break;
+                n--;
+                if (set.remove(n)) len++;
+                else break;
+            }
+            result = Math.max(result, len);
+        }
+        return result;
+    }
+}
+```
+
+#### 结果2
+
+通过
+
+用时21ms，击败89.90%

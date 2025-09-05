@@ -3,7 +3,7 @@ package com.crim.web.lab.algorithm.leetcode.simple.p2;
 import java.util.HashMap;
 
 
-public class Solution {
+class Solution {
     public int lengthOfLongestSubstring(String s) {
         int maxResult = -1;
         // 字符 - 索引 键值对
