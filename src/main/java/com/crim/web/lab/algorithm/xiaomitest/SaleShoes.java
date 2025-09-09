@@ -12,6 +12,8 @@ import java.util.Scanner;
  * 以下代码的问题：
  * 1. value应使用long而不是int
  * 2. 同尺码不同颜色处理逻辑失误
+ *
+ * @since 2025/09/06 某米笔试算法第一题
  */
 public class SaleShoes {
     

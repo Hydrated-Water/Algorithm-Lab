@@ -30,6 +30,8 @@ import java.util.Scanner;
  * <p/>
  * 以下代码的问题：（通过率50%）
  * 1. （可能的）当进程总score达S就停止，但要求可能仍需要继续输出父进程直到超出阈值T
+ *
+ * @since 2025/09/06 某信服笔试算法第一题
  */
 public class BadProcessChain {
     

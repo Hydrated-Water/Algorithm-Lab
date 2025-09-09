@@ -6,6 +6,6 @@ import com.crim.web.lab.algorithm.leetcode.problem.p128.LongestConsecutiveSequen
 
 public class Main {
     public static void main(String[] args) {
-        new LongestConsecutiveSequence().run();
+    
     }
 }
