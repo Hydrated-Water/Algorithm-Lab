@@ -1,4 +1,4 @@
-package com.crim.web.lab.algorithm.leetcode.simple.p11;
+package com.crim.web.lab.algorithm.leetcode.problem.p11;
 
 class Solution {
     public int maxArea(int[] height) {

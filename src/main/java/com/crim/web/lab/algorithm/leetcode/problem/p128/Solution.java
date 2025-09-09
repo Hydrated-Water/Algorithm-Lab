@@ -1,4 +1,4 @@
-package com.crim.web.lab.algorithm.leetcode.simple.p128;
+package com.crim.web.lab.algorithm.leetcode.problem.p128;
 
 import java.util.HashSet;
 

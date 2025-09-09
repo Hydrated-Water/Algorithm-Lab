@@ -1,4 +1,4 @@
-package com.crim.web.lab.algorithm.leetcode.simple.p2;
+package com.crim.web.lab.algorithm.leetcode.problem.p2;
 
 public class LongestSubstringWithoutRepeatingCharacters {
 }

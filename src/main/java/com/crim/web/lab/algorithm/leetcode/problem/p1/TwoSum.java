@@ -1,4 +1,4 @@
-package com.crim.web.lab.algorithm.leetcode.simple.p1;
+package com.crim.web.lab.algorithm.leetcode.problem.p1;
 
 /**
  * 1. 两数之和

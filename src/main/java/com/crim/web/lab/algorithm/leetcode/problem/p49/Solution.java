@@ -1,4 +1,4 @@
-package com.crim.web.lab.algorithm.leetcode.simple.p49;
+package com.crim.web.lab.algorithm.leetcode.problem.p49;
 
 import java.util.ArrayList;
 import java.util.HashMap;

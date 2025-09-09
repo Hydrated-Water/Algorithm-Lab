@@ -1,10 +1,8 @@
-package com.crim.web.lab.algorithm.leetcode.simple.p128;
+package com.crim.web.lab.algorithm.leetcode.problem.p128;
 
-import java.io.InputStreamReader;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Objects;
 import java.util.Scanner;
 

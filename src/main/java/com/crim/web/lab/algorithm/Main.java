@@ -1,7 +1,7 @@
 package com.crim.web.lab.algorithm;
 
 
-import com.crim.web.lab.algorithm.leetcode.simple.p128.LongestConsecutiveSequence;
+import com.crim.web.lab.algorithm.leetcode.problem.p128.LongestConsecutiveSequence;
 
 
 public class Main {
