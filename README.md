@@ -761,7 +761,7 @@ class Solution {
 
 
 
-## 42. 接雨水
+## 42. 接雨水 Trapping Rain Water
 
 
 
@@ -1212,6 +1212,141 @@ class Solution {
 用时21ms，击败89.90%
 
 
+
+
+
+## 438. 找到字符串中所有字母异位词 Find All Anagrams in a String
+
+
+
+### 题目
+
+[中等](https://leetcode.cn/problems/find-all-anagrams-in-a-string/)
+
+> 给定两个字符串 `s` 和 `p`，找到 `s` 中所有 `p` 的 **异位词** 的子串，返回这些子串的起始索引。不考虑答案输出的顺序。
+>
+> **示例 1:**
+>
+> ```
+> 输入: s = "cbaebabacd", p = "abc"
+> 输出: [0,6]
+> 解释:
+> 起始索引等于 0 的子串是 "cba", 它是 "abc" 的异位词。
+> 起始索引等于 6 的子串是 "bac", 它是 "abc" 的异位词。
+> ```
+>
+>  **示例 2:**
+>
+> ```
+> 输入: s = "abab", p = "ab"
+> 输出: [0,1,2]
+> 解释:
+> 起始索引等于 0 的子串是 "ab", 它是 "ab" 的异位词。
+> 起始索引等于 1 的子串是 "ba", 它是 "ab" 的异位词。
+> 起始索引等于 2 的子串是 "ab", 它是 "ab" 的异位词。
+> ```
+>
+> **提示:**
+>
+> - `1 <= s.length, p.length <= 3 * 104`
+> - `s` 和 `p` 仅包含小写字母
+>
+> ------
+>
+> 通过次数 791,780/1.5M
+>
+> 通过率 54.4%
+
+
+
+### 思路
+
+1. 计数
+
+   对于字符串`s`的任意索引处`s[i]`，需知道`s[i]`到`s[i+p.length-1]`处的所有字符及其出现次数是否匹配字符串`p`
+
+   由于`s`和`p`仅包含小写字母，可考虑使用一个长度为26的`int`的计数数组，使其存储一个字符串所有小写字母的出现次数
+
+   那么如果使用计数数组`t`对字符串`p`进行计数并存储，并且，对于字符串`s`的任意索引处`s[i]`均由计数数组`n_i`存储有`s[i]`到`s[i+p.length-1]`处的所有小写字母的计数，那么仅需匹配`t`和`n_i`即可知索引`i`是否符合要求，那么匹配字符串`s`的所有位置的时间复杂度为 O(n)
+
+   对字符串`s`的任意索引处`s[i]`生成所有`n_i`将导致时间复杂度上升至 O(nm) （其中m为字符串`p`的长度），现考虑字符串`s`的两个子串`s[i]`到`s[i+p.length-1]`与`s[i+1]`到`s[i+p.length]`，可知两个子串仅有两个字符的不同，那么其计数数组`n_i`与`n_i+1`也最多有两个元素的不同
+
+   那么考虑在已知`s[i+1]`到`s[i+p.length]`的计数数组`n_i+1`情况下，仅需通过查看`s[i]`和`s[i+p.length]`的元素值即可通过两步修改操作获得`n_i`
+
+   因此可以使用以下算法：
+
+   1. 倒序遍历字符串`s`直到`i == s.length - p.length`，并得到计数数组`ni`
+   2. `i`递减，如果`i < 0`，则中止
+   3. 查找`s[i]`和`s[i+p.length]`元素值，并修改计数数组`ni`
+   4. 匹配计数数组`ni`与目标计数数组`n`，当两者相同时`i`为结果之一
+   5. 返回步骤 2
+
+   该算法时间复杂度为 O(n)
+
+   需考虑的边界条件：
+
+   1. `s.length <= p.length`
+   2. `p.length <= 1`
+
+2. 哈希
+
+   与上述的“1. 计数”法类似，但使用一个哈希值来表示每个`s[i]`到`s[i+p.length-1]`，并且有以下哈希算法：`hash(str) = hash(str[0]) + ... + hash(str[str.length-1])`
+
+   这个算法保证了在已知`s[i+1]`到`s[i+p.length]`的哈希值的情况下仅需两步计算即可获得`s[i]`到`s[i+p.length]`的哈希值，然后匹配字符串`p`的哈希，如果相等，则匹配详细的字符串内容以进一步确认是否为目标
+
+   这个思路适用于当`p`中不仅包含小写字母、且`s`中匹配的索引较少的情景，且需要设计良好的哈希函数，理想状况下时间复杂度为 O(n) ，最坏情况下时间复杂度为 O(nm) （如当对每一个`i`均匹配`p`时）
+
+
+
+### 计数
+
+#### 代码
+
+```java
+class Solution {
+    public List<Integer> findAnagrams(String s, String p) {
+        /// 结果
+        List<Integer> result = new ArrayList<>();
+        /// 对字符串p进行计数
+        int[] n = new int[26];
+        for (int i = 0; i < p.length(); i++) {
+            char c = p.charAt(i);
+            n[c - 'a']++;
+        }
+        /// 鲁棒性保证
+        if (p.length() > s.length() || p.isEmpty()) return result;
+        /// 对字符串s进行倒序遍历计算末尾p.length个字符的计数
+        int[] ni = new int[26];
+        for (int i = s.length() - 1; i >= s.length() - p.length(); i--) {
+            char c = s.charAt(i);
+            ni[c - 'a']++;
+        }
+        /// 匹配
+        if (Arrays.equals(n, ni)) {
+            result.add(s.length() - p.length());
+        }
+        /// 计数并匹配
+        for (int i = s.length() - p.length() - 1; i >= 0; i--) {
+            // 修改计数数组
+            ni[s.charAt(i) - 'a']++;
+            ni[s.charAt(i + p.length()) - 'a']--;
+            // 匹配
+            if (Arrays.equals(n, ni)) {
+                result.add(i);
+            }
+        }
+        return result;
+    }
+}
+```
+
+#### 结果
+
+通过
+
+用时9ms
+
+击败61.54%
 
 
 
