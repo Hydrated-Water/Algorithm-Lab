@@ -938,6 +938,8 @@ class Solution {
 
 
 
+
+
 ## 49. 字母异位词分组 Group Anagrams
 
 
@@ -1347,6 +1349,252 @@ class Solution {
 用时9ms
 
 击败61.54%
+
+
+
+
+
+## 560. 和为 K 的子数组 Subarray Sum Equals K
+
+
+
+### 题目
+
+[中等](https://leetcode.cn/problems/subarray-sum-equals-k/)
+
+> 给你一个整数数组 `nums` 和一个整数 `k` ，请你统计并返回 *该数组中和为 `k` 的子数组的个数* 。
+>
+> 子数组是数组中元素的连续非空序列。
+>
+> **示例 1：**
+>
+> ```
+> 输入：nums = [1,1,1], k = 2
+> 输出：2
+> ```
+>
+> **示例 2：**
+>
+> ```
+> 输入：nums = [1,2,3], k = 3
+> 输出：2
+> ```
+>
+> **提示：**
+>
+> - `1 <= nums.length <= 2 * 104`
+> - `-1000 <= nums[i] <= 1000`
+> - `-107 <= k <= 107`
+>
+> ------
+>
+> 通过次数 834,526/1.8M
+>
+> 通过率 45.4%
+
+
+
+### 思路
+
+1. 遍历
+
+   对于长度为`n`的数组`nums`，需要考虑从长度1到长度n的共计`n+(n-1)+...+1`个子数组的和是否与目标`k`匹配，当已知子数组`n[i]`到`n[i+p]`的和为`sum_i`时，子数组`n[i+1]`到`n[i+p+1]`的和`sum_i+1 = sum_i + n[i+p+1] - n[i]`
+
+   时间复杂度为 O(n)
+
+2. 哈希表
+
+   考虑数组的局部`nums[0]`到`nums[i-1]`与新增元素`nums[i]`，那么对于新增元素`nums[i]`需要考虑的包含它的子数组有`{nums[i]}`、`{nums[i-1],nums[i]}`、...、`{nums[0],...,nums[i-1],nums[i]}`共计`i`个子数组，并判断这`i`个子数组各自的和是否为`k`
+
+   分别计算这个`i`个子数组的各自的和将导致算法时间复杂度退化至 O(i) ，那么对长度为`n`的数组`nums`总的时间复杂度将退化至 O(n<sup>2</sup>)
+
+   换个角度，对于`i-1`个子数组`{nums[i-1],nums[i]}`、`{nums[i-2],nums[i-1],nums[i]}`、...、`{nums[0],...,nums[i-1],nums[i]}`均包含元素`nums[i]`，也就是说需判断子数组`{nums[i-1]}`、`{nums[i-2],nums[i-1]}`、...、`{nums[0],...,nums[i-1]}`各自和是否等于`k-nums[i]`
+
+   因此假设存在某种极快的方式，能够实现从某种数据结构中以时间复杂度小于 O(i) 的操作找到值为`k-nums[i]`的子数组
+
+   如果用`sum(0,p)`表示`nums[0]+...+nums[p]`，注意到`{nums[i-1]}`、`{nums[i-2],nums[i-1]}`、...、`{nums[0],...,nums[i-1]}`等`i-1`个子数组实际上可以转换成`sum(0,i-1)-sum(0,i-2)`、`sum(0,i-1)-sum(0,i-3)`、...、`sum(0,i-1)-sum(0,0)`、`sum(0,i-1)`，也就是判断这`i-1`个式子是否等于`k-nums[i]`
+
+   对于`sum(0,i-1)-sum(0,i-2)`、`sum(0,i-1)-sum(0,i-3)`、...、`sum(0,i-1)-sum(0,0)`共计`i-2`个式子又均包含`sum(0,i-1)`，因此问题再次转换为判断`sum(0,i-1)+nums[i]-k = sum(0,i) - k`是否匹配`sum(0,i-2)`到`sum(0,0)`
+
+   那么现在可以考虑存在某种数据结构计算存储了对于数组`nums`的从`sum(0,0)`到`sum(0,n)`的所有值，并且以O(1)的时间复杂度通过值索引到对应的`sum(0,p)`
+
+   因此可以考虑使用如下算法：
+
+   1. 遍历 nums，计算并存储到数组 sums，使得 sums[i] = nums[0] + ... + nums[i]
+   2. 哈希化数组 sums 存储到 HashMap <Integer, List\<Integer\>>，其以sums的元素值为键，以元素出现的所有位置索引为值，并保证List\<Integer\>中的元素值递增
+   3. 令 i = 2
+   4. 判断 i 是否超出 nums.length - 1
+   5. 判断 nums[i] 和 sums[i] 是否为 k，如果是，使结果值增加
+   6. 查找值为 sums[i] - k 的 sums 元素，且这些元素下标 p 应满足 0 <= p <= i-2，如果有满足的，使结果值增加
+   7. 使 i 递增，回到步骤 4
+
+   应考虑的边界条件：
+
+   1. 短数组，如当 nums.length 为1或2时
+
+
+
+### 遍历
+
+#### 代码
+
+```java
+class Solution {
+    public int subarraySum(int[] nums, int k) {
+        int result = 0;
+        /// 从长度为 1 开始直到长度为 nums.length 遍历 nums
+        int headSum = 0;
+        for (int len = 1; len <= nums.length; len++) {
+            headSum += nums[len - 1];
+            if (headSum == k) result++;
+            int sum = headSum;
+            for (int i = 1; i <= nums.length - len; i++) {
+                sum -= nums[i - 1];
+                sum += nums[i + len - 1];
+                if (sum == k) result++;
+            }
+        }
+        return result;
+    }
+}
+
+```
+
+#### 结果
+
+用时2249ms
+
+击败4.99%
+
+
+
+### 哈希表
+
+#### 代码1
+
+```java
+class AdvancedSolution {
+    public int subarraySum(int[] nums, int k) {
+        int result = 0;
+        /// sums[i] 即为 nums 前 i+1 个元素的和
+        int[] sums = new int[nums.length];
+        {
+            int sum = 0;
+            for (int i = 0; i < nums.length; i++) {
+                sum += nums[i];
+                sums[i] = sum;
+            }
+        }
+        /// 哈希表处理 sums
+        HashMap<Integer, List<Integer>> map = new HashMap<>(sums.length * 2);
+        for (int i = 0; i < sums.length; i++) {
+            List<Integer> list = map.get(sums[i]);
+            if (list == null) {
+                list = new ArrayList<>(3);
+                map.put(sums[i], list);
+            }
+            list.add(i);
+        }
+        /// 查看前 2 个元素
+        if (nums.length >= 1) {
+            if (nums[0] == k) result++;
+        }
+        if (nums.length >= 2) {
+            if (nums[1] == k) result++;
+            if (sums[1] == k) result++;
+        }
+        /// 查看之后的元素
+        for (int i = 2; i < nums.length; i++) {
+            if (nums[i] == k) result++;
+            if (sums[i] == k) result++;
+            List<Integer> list = map.get(sums[i] - k);
+            if (list != null) {
+                for (int j = 0; j < list.size(); j++) {
+                    if (list.get(j) <= i - 2) result++;
+                    else break;
+                }
+            }
+        }
+        return result;
+    }
+}
+```
+
+#### 结果1
+
+通过
+
+用时1786ms
+
+击败4.99%
+
+#### 分析1
+
+注意到在此代码中如果sums的元素值分布特别分散时，sums的长度将接近n，也就意味着将新建接近n的数量的List，造成性能下降
+
+
+
+#### 优化思路1-A
+
+对于任意sums[i]，实际上将寻找sums数组0到i-2中值为sums[i]-k的元素的数量，那么可以考虑优化至不使用List，使用数组counts存储，使得count[i]的值即为sums数组0到i-2中值为sums[i]-k的元素的数量，而构建counts数组的过程仍需要哈希表，这里采用HashMap，以sums中的元素值为键，以当前遍历至i时sums数组0到i-2中值为sums[i]-k的元素的数量为值
+
+#### 代码1-A
+
+```java
+class AdvancedSolution2 {
+    public int subarraySum(int[] nums, int k) {
+        int result = 0;
+        /// sums[i] 即为 nums 前 i+1 个元素的和
+        int[] sums = new int[nums.length];
+        {
+            int sum = 0;
+            for (int i = 0; i < nums.length; i++) {
+                sum += nums[i];
+                sums[i] = sum;
+            }
+        }
+        /// 哈希表处理 sums 到 counts，
+        /// counts[i]的值即为sums的0到i-2子数组中值为sums[i]-k的元素的数量
+        int[] counts = new int[sums.length];
+        {
+            HashMap<Integer, Integer> map = new HashMap<>(counts.length * 2);
+            for (int i = 0; i < sums.length - 2; i++) {
+                Integer sumCount = map.get(sums[i]);
+                sumCount = sumCount == null ? 1 : sumCount + 1;
+                map.put(sums[i], sumCount);
+                
+                Integer targetCount = map.get(sums[i + 2] - k);
+                counts[i + 2] = targetCount == null ? 0 : targetCount;
+            }
+        }
+        /// 查看前 2 个元素
+        if (nums.length >= 1) {
+            if (nums[0] == k) result++;
+        }
+        if (nums.length >= 2) {
+            if (nums[1] == k) result++;
+            if (sums[1] == k) result++;
+        }
+        /// 查看之后的元素
+        for (int i = 2; i < nums.length; i++) {
+            if (nums[i] == k) result++;
+            if (sums[i] == k) result++;
+            result += counts[i];
+        }
+        return result;
+    }
+}
+```
+
+#### 结果1-A
+
+通过
+
+用时14ms
+
+击败99.23%
+
+
 
 
 
