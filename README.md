@@ -1217,6 +1217,175 @@ class Solution {
 
 
 
+## 239. 滑动窗口最大值 Sliding Window Maximum
+
+
+
+### 题目
+
+[困难](https://leetcode.cn/problems/sliding-window-maximum/)
+
+> 给你一个整数数组 `nums`，有一个大小为 `k` 的滑动窗口从数组的最左侧移动到数组的最右侧。你只可以看到在滑动窗口内的 `k` 个数字。滑动窗口每次只向右移动一位。
+>
+> 返回 *滑动窗口中的最大值* 。
+>
+> **示例 1：**
+>
+> ```
+> 输入：nums = [1,3,-1,-3,5,3,6,7], k = 3
+> 输出：[3,3,5,5,6,7]
+> 解释：
+> 滑动窗口的位置                最大值
+> ---------------               -----
+> [1  3  -1] -3  5  3  6  7       3
+>  1 [3  -1  -3] 5  3  6  7       3
+>  1  3 [-1  -3  5] 3  6  7       5
+>  1  3  -1 [-3  5  3] 6  7       5
+>  1  3  -1  -3 [5  3  6] 7       6
+>  1  3  -1  -3  5 [3  6  7]      7
+> ```
+>
+> **示例 2：**
+>
+> ```
+> 输入：nums = [1], k = 1
+> 输出：[1]
+> ```
+>
+> **提示：**
+>
+> - `1 <= nums.length <= 105`
+> - `-104 <= nums[i] <= 104`
+> - `1 <= k <= nums.length`
+>
+> ------
+>
+> 通过次数 952,935/1.9M
+>
+> 通过率 49.8%
+
+
+
+### 思路
+
+1. 红黑树
+
+   比起对每个滑动窗口进行扫描以获取最大值这一时间复杂度高达 O(n<sup>2</sup>) 的算法，红黑树可以在单个元素的插入、查找、删除的时间复杂度在 O(logn) 的情况下提供排序功能
+
+   那么可以考虑使用`TreeMap`，以元素值为键，以元素值在滑动窗口中的次数为值，使用`TreeMap.lastKey`方法即可获取最大的键
+
+   时间复杂度为 O(nlogn)
+
+2. 扫描
+
+   记录当前滑动窗口内的最大值 m 及该最大值出现的次数 c，遍历数组 nums ，如果nums[i] >= m（i >= k），则更新 m 和 c，如果 nums[i - k] == m，则 c 递减
+
+   当 c 为 0 时，说明当前滑动窗口无已知最大值，对当前窗口进行一次扫描找到 m 及 c ，此操作时间复杂度为 O(k)
+
+   该算法实现简单，假设对于每个滑动窗口最大值的分布平均，那么在 k << n 的情况下该算法平均需要进行 n/(k/2) 次对滑动窗口的扫描操作，平均时间复杂度为 O(2n) 
+
+   最坏的情况下 nums 是递增的，此时时间复杂度将退化至 O(nk)
+
+   最好的情况下不需要对滑动窗口进行扫描（除了第一个滑动窗口），此时时间复杂度为 O(n)
+
+3. **上述方案均表现不佳**
+
+
+
+### 红黑树
+
+#### 代码
+
+```java
+class Solution {
+    public int[] maxSlidingWindow(int[] nums, int k) {
+        int[] result = new int[nums.length - k + 1];
+        TreeMap<Integer, Integer> map = new TreeMap<>();
+        for (int i = 0; i < nums.length; i++) {
+            map.compute(nums[i], (key, count) -> count == null ? 1 : count + 1);
+            if (i >= k) {
+                Integer count = map.get(nums[i - k]);
+                Integer ignore = count == 1 ? map.remove(nums[i - k]) : map.put(nums[i - k], count - 1);
+            }
+            if (i >= k - 1) result[i - k + 1] = map.lastKey();
+        }
+        return result;
+    }
+}
+```
+
+#### 结果
+
+通过
+
+用时293ms
+
+击败5.10%
+
+
+
+### 扫描
+
+#### 代码
+
+```java
+class AdvancedSolution {
+    public int[] maxSlidingWindow(int[] nums, int k) {
+        int[] result = new int[nums.length - k + 1];
+        int m = Integer.MIN_VALUE;
+        int c = 0;
+        /// 初始扫描
+        for (int i = 0; i < k; i++) {
+            if (nums[i] > m) {
+                m = nums[i];
+                c = 1;
+            }
+            else if (nums[i] == m) {
+                c++;
+            }
+        }
+        result[0] = m;
+        /// 后续遍历
+        for (int i = k; i < nums.length; i++) {
+            if (nums[i - k] == m) c--;
+            if (nums[i] > m) {
+                m = nums[i];
+                c = 1;
+            }
+            else if (nums[i] == m) {
+                c++;
+            }
+            if (c == 0) {
+                m = Integer.MIN_VALUE;
+                for (int j = i - k + 1; j <= i; j++) {
+                    if (nums[j] > m) {
+                        m = nums[j];
+                        c = 1;
+                    }
+                    else if (nums[j] == m) {
+                        c++;
+                    }
+                }
+            }
+            result[i - k + 1] = m;
+        }
+        return result;
+    }
+}
+```
+
+#### 结果
+
+通过
+
+用时1410ms
+
+击败5.10%
+
+
+
+
+
 ## 438. 找到字符串中所有字母异位词 Find All Anagrams in a String
 
 
@@ -1402,7 +1571,7 @@ class Solution {
 
    时间复杂度为 O(n)
 
-2. 哈希表
+2. 哈希表 + 前缀和
 
    考虑数组的局部`nums[0]`到`nums[i-1]`与新增元素`nums[i]`，那么对于新增元素`nums[i]`需要考虑的包含它的子数组有`{nums[i]}`、`{nums[i-1],nums[i]}`、...、`{nums[0],...,nums[i-1],nums[i]}`共计`i`个子数组，并判断这`i`个子数组各自的和是否为`k`
 
@@ -1612,6 +1781,12 @@ class AdvancedSolution2 {
 
 - 哈希表
 
+- 红黑树
+
+  提供在 O(logn) 时间复杂度下对一个元素进行查找、插入并排序、删除的操作
+
+  如 TreeMap、TreeSet，其相较 HashMap、HashSet 虽然性能略差，但提供了排序功能
+
 ### 算法
 
 - 二分查找 O(logn)
@@ -1635,3 +1810,7 @@ class AdvancedSolution2 {
 - 滑动窗口 O(n)
 
   常用于处理数组/列表等线性数据结构的关于局部数据的问题
+  
+- 前缀和
+
+  前缀和 pre[i] 指的是数组 nums[0] 到 nums[i] 的和，对于数组元素 i+1 到 j 的子数组的和，可以用 pre[j] - pre[i] 来计算
