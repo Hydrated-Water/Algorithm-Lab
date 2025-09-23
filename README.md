@@ -1059,6 +1059,400 @@ class Solution {
 
 
 
+## 76. 最小覆盖子串 Minimum Window Substring
+
+
+
+### 题目
+
+[困难](https://leetcode.cn/problems/minimum-window-substring/)
+
+> 给你一个字符串 `s` 、一个字符串 `t` 。返回 `s` 中涵盖 `t` 所有字符的最小子串。如果 `s` 中不存在涵盖 `t` 所有字符的子串，则返回空字符串 `""` 。
+>
+> **注意：**
+>
+> - 对于 `t` 中重复字符，我们寻找的子字符串中该字符数量必须不少于 `t` 中该字符数量。
+> - 如果 `s` 中存在这样的子串，我们保证它是唯一的答案。
+>
+> **示例 1：**
+>
+> ```
+> 输入：s = "ADOBECODEBANC", t = "ABC"
+> 输出："BANC"
+> 解释：最小覆盖子串 "BANC" 包含来自字符串 t 的 'A'、'B' 和 'C'。
+> ```
+>
+> **示例 2：**
+>
+> ```
+> 输入：s = "a", t = "a"
+> 输出："a"
+> 解释：整个字符串 s 是最小覆盖子串。
+> ```
+>
+> **示例 3:**
+>
+> ```
+> 输入: s = "a", t = "aa"
+> 输出: ""
+> 解释: t 中两个字符 'a' 均应包含在 s 的子串中，
+> 因此没有符合条件的子字符串，返回空字符串。
+> ```
+>
+> **提示：**
+>
+> - `m == s.length`
+> - `n == t.length`
+> - `1 <= m, n <= 105`
+> - `s` 和 `t` 由英文字母组成
+>
+> **进阶：**你能设计一个在 `o(m+n)` 时间内解决此问题的算法吗？
+>
+> ------
+>
+> 通过次数 891,088/1.8M
+>
+> 通过率 48.3%
+
+
+
+### 思路
+
+1. 遍历
+
+   对字符串 t 的所有字符进行计数，并对字符串 s 的所有长度的子串进行字符计数并匹配
+
+2. 哈希
+
+   > 思路来源：
+   >
+   > 笔者注意到对于字符串 s 的任意子串 s' ，可以假设存在一个哈希表 <字符, List<索引>>，使得通过遍历索引就可判断是否存在指定个数的字符位于 s' 中
+   >
+   > 笔者又注意到假设任取字符 c 属于 t，对字符串 s 的所有 c 进行计数，得到长度与 s 相同的计数数组 scCount，使得 scCount[i] 即为 s 前 i+1 个字符中 c 字符的个数
+   >
+   > 那么再对 scCount 进行统计得到预测计数数组 scPre ，使得指定字符 c 的个数 k 时，scPre[i] 即为从 s[i] 开始到 s[scPre[i]] （包括两端）的子串中包含 k 个 c 字符
+   >
+   > ```
+   > 0 1 2 3 4 5 6 7 8 9   // 字符串 s 的索引
+   > 0 0 1 2 3 3 3 4 5 6   // 计数数组 scCount，指定字符 c='A'
+   > 3 3 3 4 7 8 8 8 9 -1  // 预测计数数组 scPre，指定 k=2
+   > O O A A A O O A A A   // 字符串 s
+   > ```
+   >
+   > 也就是说，假设已知字符串 t 中所有字符及其个数（键值对 <字符C, 个数K>），那么可以对字符串 s 进行统计，得到所有 c（属于C）的预测计数数组 <字符C，scCount>，使得对于字符串 s 的任意索引处 i，从 <字符C，scCount> 获取所有 c（属于C）对应的 scCount[i]，并得到最大值 p ，那么索引 i 到 p （包括两端）组成的子串满足从索引 i 开始最小的“涵盖 t 所有字符的子串”
+   >
+   > 那么只要遍历 i ，即可找到字符串 s 中满足最小的“涵盖 t 所有字符的子串”
+   >
+   > 但实际情况可有所优化
+   >
+   > ```
+   > 0 1 2 3 4 5 6 7 8 9   // 字符串 s 的索引
+   > 
+   > 0 0 1 2 3 3 3 4 5 6   // 计数数组 scCount，指定字符 c='A'
+   > 3 3 3 4 7 8 8 8 9 -1  // 预测计数数组 scPre，指定 k=2
+   > 
+   > 1 2 2 2 2 3 4 4 4 4   // 计数数组 scCount，指定字符 c='B'
+   > 1 5 6 6 6 6 -1
+   > 
+   > B B A A A B B A A A   // 字符串 s，假设 t = "AABB"
+   > 
+   > 字符 'A' 的索引列表：
+   > [2,3,4,7,8,9]
+   > 字符 'B' 的索引列表：
+   > [0,1,5,6]
+   > ```
+   >
+   > 如果仅考虑特定字符的索引列表而不是进行计数，那么可以考虑使用一个指针指向索引列表的指定位置 q，使得当前索引 i 到 q 包括了 k 个字符 c
+   >
+   > ```
+   > 当 i = 0 时
+   > 字符 'A' 的索引列表：
+   > [2,3,4,7,8,9]
+   >    ↑
+   > 字符 'B' 的索引列表：
+   > [0,1,5,6]
+   >    ↑
+   > ```
+   >
+   > 那么这些指针指向的最大值 max ，则有 i 到 max （包括两端）子串满足 i 开始的最小的“涵盖 t 所有字符的子串”
+   >
+   > 那么递增 i ，当 s[i-1] 对应的字符属于 t 时，可将对应字符索引列表的指针向前移动一位，如果超出了列表范围，则证明 i 及之后的字符组成的子串不满足上述条件
+
+   考虑算法
+
+   1. 对 t 进行字符计数得到 tCount 键值对 <字符C，字符个数K>
+
+      时间复杂度 O(n)
+
+   2. 对 s 进行字符索引哈希，得到 sMap 键值对 <字符C，List<字符索引P>>，其中集合字符C即为上一步的字符C，List<字符索引P> 中的值递增
+
+      时间复杂度 O(m)
+
+   3. 初始化预测索引集 preMap 键值对 <字符C，预测索引Q> ，使得任取 <c,q> 属于 preMap，均有 <c,k> 属于 tCount，<c,pList> 属于 sMap，使得 q 等于 k-1，并且 pList\<q\> 有效
+
+      - 如果存在 pList\<q\> 无效，返回 ""
+
+      时间复杂度 O(n)
+
+   4. 令 u 为 pList\<q\> 的最大值
+
+   5. 令 result = s[0 ~ u]
+
+   6. 使 i = 1
+
+   7. i <= s.length，否则返回 result
+
+   8. 检查字符 ci = s[i-1]，如果 ci 属于 C，那么 <ci,qi> 属于preMap，使 qi 递增，并且 pList\<qi\> 有效，并且当 pList\<qi\> 大于 u 时更新 u 值
+
+      - 如果 pList\<qi\> 无效，返回 result
+
+   9. 如果 u - i + 1 < result.length，使 result = s[i ~ u]
+
+   10. i++，回到步骤 7
+
+       时间复杂度 O(m)
+
+   上述算法时间复杂度为 O(m+n)
+
+3. 窗口
+
+   > 思路来源：
+   >
+   > 假设 t 的字符计数键值对 tCount <c,k>
+   >
+   > i 到 p 子串的字符计数键值对 count <c,q>
+   >
+   > 对于 s 的任意索引处 i，要么不存在从 i 开始的子串满足涵盖 t，要么存在一个最小的子串 i 到 p 涵盖 t
+   >
+   > 那么假设令 i = 0，找到 p 使得 i 到 p 子串是 i = 0 开始的最小涵盖 t 子串
+   >
+   > 则当字符 c = s[i]，当前子串 c 字符个数 q = count.get(c)，满足 q 等于 tCount.get(c) 时，说明不存在以 p 结尾的更短的满足涵盖 t 的子串
+   >
+   > 那么此时不断递增 q 直到 q1，使得 s[q1] 等于 c 导致 q = count.get(c) 大于 tCount.get(c)，即说明不存在以 q 到 q1 - 1 结尾的且以 i = 0 开头的更短的涵盖 t 的子串
+   >
+   > 由于 q 已经递增到 q1，此时应递增 i 直到 count.get(s[i]) 等于 tCount.get(s[i])，即说明找到以 q1 结尾的最短的满足涵盖 t 的子串
+   >
+   > 之后继续递增 q ，以此类推
+   >
+   > 即，上述算法保证对于任意 s 的索引 q，找到最短的以 q 为结尾的子串涵盖 t
+
+   考虑算法
+
+   1. 初始化 t 的字符计数键值对 tCount\<字符, 个数\>
+
+      时间复杂度 O(n)
+
+   2. 初始化当前子串字符计数键值对 count\<字符, 个数\>，确保 count 与 tCount 键相等而值为 0
+
+      时间复杂度 O(n)
+
+   3. i = 0, p = -1
+
+   4. 找到第一个子串涵盖 t
+
+      4.1 令 u = 0
+
+      4.2 当 u >= tCount.size 时，进入步骤 5，当 p >= s.length 时，返回 ""
+
+      4.3 递增 p，使 c = s[p] 令 count.get(c)++
+
+      4.4 当 count.get(c) == tCount.get(c) 时，令 u++
+
+      4.5 回到步骤 4.2
+
+      时间复杂度 O(m)
+
+   5. 令 start = i, end = p
+
+   6. 当 p >= s.length 时，返回 s[start ~ end]
+
+      时间复杂度 O(m)
+
+   7. 如果 c = s[i]，且 count.get(c) > tCount.get(c)
+
+      应递增 i
+
+      7.1 令 count.get(c)--
+
+      7.2 令 i++
+
+      7.3 如果 p - i +1 < end - start + 1，令 start,end = i,p
+
+      7.4 回到步骤 6
+
+   8. 否则
+
+      应递增 p
+
+      8.1 令 p++, cp = s[p]
+
+      8.2 令 count.get(cp)++
+
+      8.3 如果 p - i +1 > end - start + 1，令 start,end = i,p
+
+      8.4 回到步骤 6
+
+   上述算法存在缺陷，它没有考虑 s[i] 不属于 t 的情况，且对 p 是否超出 s 索引范围的判断时机存在问题，应在 p 递增后判断
+
+   考虑边界条件
+
+   - s = "a", t = "b"
+   - s = "a", t = "aa"
+   - s = "a", t = "a"
+   - s = "aa", t = "a"
+
+   总时间复杂度 O(m+n)
+
+
+
+### 哈希
+
+#### 代码
+
+```java
+class Solution {
+    public String minWindow(String s, String t) {
+        /// 对 t 进行计数
+        Map<Character, Integer> tCount = new HashMap<>();
+        for (int i = 0; i < t.length(); i++) {
+            char c = t.charAt(i);
+            tCount.merge(c, 1, Integer::sum);
+        }
+        /// 对 s 进行哈希
+        Map<Character, List<Integer>> sMap = new HashMap<>();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (tCount.containsKey(c)) {
+                List<Integer> list = sMap.get(c);
+                if (list == null) {
+                    list = new ArrayList<>();
+                    sMap.put(c, list);
+                }
+                list.add(i);
+            }
+        }
+        // 提高鲁棒性
+        if (sMap.isEmpty() || tCount.size() != sMap.size()) return "";
+        
+        int u = Integer.MIN_VALUE;
+        /// 预测索引集
+        Map<Character, Integer> preMap = new HashMap<>();
+        for (Map.Entry<Character, List<Integer>> entry : sMap.entrySet()) {
+            char c = entry.getKey();
+            List<Integer> list = entry.getValue();
+            int k = tCount.get(c);
+            int q = k - 1;
+            if (q >= list.size()) return "";
+            preMap.put(c, q);
+            u = Math.max(u, list.get(q));
+        }
+        
+        String result = s.substring(0, u + 1);
+        for (int i = 1; i <= s.length(); i++) {
+            char c = s.charAt(i - 1);
+            Integer q = preMap.get(c);
+            if (q != null) {
+                q++;
+                List<Integer> list = sMap.get(c);
+                if (q >= list.size()) return result;
+                preMap.put(c, q);
+                u = Math.max(u, list.get(q));
+            }
+            if (u - i + 1 < result.length()) result = s.substring(i, u + 1);
+        }
+        
+        return result;
+    }
+}
+```
+
+#### 结果
+
+在测试用例提示下解决边界条件问题
+
+通过
+
+用时 164ms
+
+击败 25.69%
+
+
+
+### 窗口
+
+#### 代码
+
+```java
+class AdvancedSolution {
+    public String minWindow(String s, String t) {
+        /// t 字符计数
+        Map<Character, Integer> tCount = new HashMap<>();
+        for (int i = 0; i < t.length(); i++) {
+            char c = t.charAt(i);
+            tCount.merge(c, 1, Integer::sum);
+        }
+        /// 初始化当前子串字符计数
+        Map<Character, Integer> count = new HashMap<>();
+        for (Character c : tCount.keySet()) {
+            count.put(c, 0);
+        }
+        /// 找到第一个子串
+        int i = 0;
+        int p = -1;
+        int u = 0;
+        while (u < tCount.size()) {
+            p++;
+            if (p >= s.length()) return "";
+            char c = s.charAt(p);
+            Integer k = count.get(c);
+            if (k != null) {
+                k++;
+                count.put(c, k);
+                if (k.equals(tCount.get(c))) u++;
+            }
+        }
+        /// 找最小子串
+        int start = i;
+        int end = p;
+        while (true) {
+            char c = s.charAt(i);
+            Integer k = count.get(c);
+            if (k == null) {
+                i++;
+            }
+            else if (k > tCount.get(c)) {
+                count.put(c, k - 1);
+                i++;
+            }
+            else {
+                p++;
+                if (p >= s.length()) return s.substring(start, end + 1);
+                char cp = s.charAt(p);
+                Integer kp = count.get(cp);
+                if (kp != null) {
+                    count.put(cp, kp + 1);
+                }
+            }
+            
+            if (p - i + 1 < end - start + 1) {
+                start = i;
+                end = p;
+            }
+        }
+    }
+}
+```
+
+#### 结果
+
+通过
+
+用时17ms
+
+击败63.15%
+
+
+
 ## 128. 最长连续序列 Longest Consecutive Sequence
 
 
@@ -1775,9 +2169,21 @@ class AdvancedSolution2 {
 
 - 数组/列表
 
+  - 子数组
+
+    数组中一个或多个连续的元素组成的序列
+
+  - 子序列
+
+    数组中一个或多个保持相对顺序组成的序列
+
 - 字符串
 
   字符串应视为数组的一种形式，其操作的时间复杂度与数组相同
+
+  - 子串
+
+    字符串的子数组
 
 - 哈希表
 
