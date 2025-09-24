@@ -1059,6 +1059,355 @@ class Solution {
 
 
 
+## 53. 最大子数组和 Maximum Subarray
+
+
+
+### 题目
+
+[中等](https://leetcode.cn/problems/maximum-subarray/description/)
+
+> 给你一个整数数组 `nums` ，请你找出一个具有最大和的连续子数组（子数组最少包含一个元素），返回其最大和。
+>
+> **子数组**是数组中的一个连续部分。
+>
+> **示例 1：**
+>
+> ```
+> 输入：nums = [-2,1,-3,4,-1,2,1,-5,4]
+> 输出：6
+> 解释：连续子数组 [4,-1,2,1] 的和最大，为 6 。
+> ```
+>
+> **示例 2：**
+>
+> ```
+> 输入：nums = [1]
+> 输出：1
+> ```
+>
+> **示例 3：**
+>
+> ```
+> 输入：nums = [5,4,-1,7,8]
+> 输出：23
+> ```
+>
+> **提示：**
+>
+> - `1 <= nums.length <= 105`
+> - `-104 <= nums[i] <= 104`
+>
+> **进阶：**如果你已经实现复杂度为 `O(n)` 的解法，尝试使用更为精妙的 **分治法** 求解。
+>
+> ------
+>
+> 通过次数 2,284,332/4.1M
+>
+> 通过率 56.4%
+
+
+
+### 思路
+
+1. 缩小范围
+
+   考虑 nums 数组中的元素特征为正数、负数和 0
+
+   ```
+   -  +  +  +  -  -  +  -  0  -  +  0
+   0  1  2  3  4  5  6  7  8  9  10 11
+   ```
+
+   对于一个子数组，如果包括了一个正数元素（如索引1），那么为了和最大，它必然包括相邻该正数元素的所有正数
+
+   如果这个子数组包括了一个负数元素（如索引5），那么为了和最大，它必然包括该负数元素的一个方向上延伸的所有负数元素（如索引4），并试图找到正数元素（如索引3、2、1）以“抵消”负数元素对和的影响
+
+   而 0 元素对和无影响，可以直接忽略
+
+   并且，如果 nums 数组的最左端或最右端是1个或多个连续的负数，那么子数组必然不会包括它们，因为无法找到更多的正数抵消这些负数对和的影响
+
+   那么一个 nums 数组可以经过如下简化操作变成 datas 数组：
+
+   - 将所有相邻的正数元素合并
+   - 将所有相邻的负数元素合并
+   - 将所有的0忽略
+   - 将数组最左端和最右端的连续的负数全部忽略
+
+   如
+
+   ```
+   + - + - +
+   0 1 2 3 4
+   ```
+
+   那么 datas 数组一定是从正数开始，正负数交替出现的奇数长的数组
+
+   首先考虑 datas 中的所有正数，找到最大值 max ，它是最大和子数组的候选之一
+
+   注意之前的结论，任意子数组如果包括了一个负数，那么它必须再包括一个正数以试图抵消该负数对和的影响，因此，一个候选的子数组必然是以正数开头且以正数结尾
+
+   现在开始遍历 datas，令 i=0，sum = datas[0]，i 每次步进2，保证 datas[i] > 0
+
+   - 如果 sum + datas[i+1] < 0
+
+     那么任意子数组不可能包括 sum 和 datas[i+1]，因为这减小了该子数组的和
+
+     使 sum = datas[i+2]（重置子数组）
+
+     i 步进，继续遍历
+
+   - 如果 sum + datas[i+1] >= 0
+
+     那么任意包括了 datas[i+2] 的子数组必然包括 sum 、datas[i+1]，因为这可以使该子数组的和更大
+
+     使 sum += datas[i+1] + datas[i+2]，并比较 sum 和 max 以找到目前已知的最大和子数组
+
+   考虑边界条件
+
+   - nums 只有一个元素
+   - nums 只有正数或0
+   - nums 只有负数或0
+   - nums 是连续的负数-连续的正数-连续的负数形式
+
+
+
+### 缩小范围
+
+#### 代码
+
+```java
+class Solution {
+    public int maxSubArray(int[] nums) {
+        // 它的实际长度应小于nums.length
+        int[] datas = new int[nums.length];
+        int len = 0;
+        for (int i = 0; i < nums.length; i++) {
+            // 去除头部负数
+            if (len == 0) {
+                if (nums[i] <= 0) continue;
+                else {
+                    len++;
+                    datas[0] = nums[i];
+                }
+            }
+            else if (len % 2 == 1) {
+                if (nums[i] >= 0) datas[len - 1] += nums[i];
+                else {
+                    len++;
+                    datas[len - 1] = nums[i];
+                }
+            }
+            else {
+                if (nums[i] <= 0) datas[len - 1] += nums[i];
+                else {
+                    len++;
+                    datas[len - 1] = nums[i];
+                }
+            }
+        }
+        
+        // nums 只有负数或0的情况
+        // 逻辑错误
+//        if (len == 0) return Arrays.stream(nums).sum();
+        if(len == 0) return Arrays.stream(nums).max().orElse(0);
+        // 去除 datas 尾部负数
+        if (datas[len - 1] <= 0) len--;
+        
+        // 遍历 datas
+        int max = datas[0];
+        int sum = datas[0];
+        for (int i = 0; i <= len - 3; i += 2) {
+            if (sum + datas[i + 1] < 0) {
+                sum = datas[i + 2];
+            }
+            else {
+                sum += datas[i + 1] + datas[i + 2];
+            }
+            max = Math.max(max, sum);
+        }
+        
+        return max;
+    }
+}
+```
+
+#### 结果
+
+在测试用例提示下解决全负数元素数组情况下的逻辑错误
+
+通过
+
+用时6ms
+
+击败3.30%
+
+#### 分析
+
+该方法本质上是动态规划，代码简化到极致是
+
+```java
+class Solution {
+    public int maxSubArray(int[] nums) {
+        int sum = nums[0];
+        int ans = nums[0];
+        for (int i = 1; i < nums.length; i++) {
+            sum = Math.max(sum + nums[i], nums[i]);
+            ans = Math.max(sum, ans);
+        }
+        return ans;
+    }
+}
+```
+
+大道至简
+
+
+
+
+
+## 55. 合并区间 Merge Intervals
+
+
+
+### 题目
+
+[中等](https://leetcode.cn/problems/merge-intervals/description/)
+
+>以数组 `intervals` 表示若干个区间的集合，其中单个区间为 `intervals[i] = [starti, endi]` 。请你合并所有重叠的区间，并返回 *一个不重叠的区间数组，该数组需恰好覆盖输入中的所有区间* 。
+>
+>**示例 1：**
+>
+>```
+>输入：intervals = [[1,3],[2,6],[8,10],[15,18]]
+>输出：[[1,6],[8,10],[15,18]]
+>解释：区间 [1,3] 和 [2,6] 重叠, 将它们合并为 [1,6].
+>```
+>
+>**示例 2：**
+>
+>```
+>输入：intervals = [[1,4],[4,5]]
+>输出：[[1,5]]
+>解释：区间 [1,4] 和 [4,5] 可被视为重叠区间。
+>```
+>
+>**示例 3：**
+>
+>```
+>输入：intervals = [[4,7],[1,4]]
+>输出：[[1,7]]
+>解释：区间 [1,4] 和 [4,7] 可被视为重叠区间。
+>```
+>
+>**提示：**
+>
+>- `1 <= intervals.length <= 104`
+>- `intervals[i].length == 2`
+>- `0 <= starti <= endi <= 104`
+>
+>------
+>
+>通过次数 1,296,052/2.5M
+>
+>通过率 52.2%
+
+
+
+### 思路
+
+1. 布尔数组
+
+   由于 start_i 、end_i 的范围不是特别大，可以创建一个该范围大小的布尔数组，对intervals 进行遍历使对应布尔数组元素值为 true ，最后遍历布尔数组返回合并后的区间
+
+   时间复杂度 O(mn)，其中 n 为 intervals 大小，m为 start_i、end_i 取值范围
+
+2. 排序并计数
+
+   考虑两个区间 [a,b] 和 [c,d]
+
+   区间不重叠的情况有两种：
+
+   - c > b
+   - d < a
+
+   区间重叠的情况有两种：
+
+   - c < a 且 d >= a
+   - a <= c <= b
+
+   如果令一个区间的 start 的权重为 1，令 end 的权重为 -1
+
+   那么使 weight = 0，使所有区间的 start、end 排序并赋予权重，遍历排序后的数组
+
+   那么如果遇到一个 start，使 weight++，遇到一个 end，使 weight--
+
+   注意到，当 weight != 0 时，索引总是指向一个或多个区间的内部，当 weight 从 0 变成正数时，索引开始进入一个或多个区间，当 weight 从 正数变成 0 时，索引从一个或多个区间中离开
+
+   weight 不可能为负数，因为不存在 end < start
+
+   因此可以通过这种方式合并区间
+
+   可以使用 TreeMap，以 start 或 end 为键，以权重为值，特别的，当多个 start 相同时，值 >1，当多个 end 相同时，值 <-1 ，当存在一个或多个 start == end 时，值可能为 0 ，有可能不为 0
+
+   时间复杂度 O(nlogn)
+
+
+
+### 排序并计数
+
+#### 代码
+
+```java
+class Solution {
+    public int[][] merge(int[][] intervals) {
+        // 排序并赋予权重
+        TreeMap<Integer, Integer> map = new TreeMap<>();
+        for (int[] ivl : intervals) {
+            map.merge(ivl[0], 1, Integer::sum);
+            map.merge(ivl[1], -1, Integer::sum);
+        }
+        // 遍历
+        ArrayList<int[]> result = new ArrayList<>(intervals.length);
+        int weight = 0;
+        int start = -1;
+        for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
+            int key = entry.getKey();
+            int value = entry.getValue();
+            if (weight == 0) {
+                // 单独的 start == end 区间
+                if (value == 0) {
+                    result.add(new int[]{key, key});
+                }
+                // 开始一个新区间
+                else {
+                    weight += value;
+                    start = key;
+                }
+            }
+            else {
+                weight += value;
+                // 结束一个区间
+                if (weight == 0) {
+                    result.add(new int[]{start, key});
+                }
+            }
+        }
+        return result.toArray(new int[0][0]);
+    }
+}
+```
+
+#### 结果
+
+通过
+
+用时 9ms
+
+击败17.79%
+
+
+
 ## 76. 最小覆盖子串 Minimum Window Substring
 
 
