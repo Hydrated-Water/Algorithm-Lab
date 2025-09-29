@@ -2338,6 +2338,164 @@ class AdvancedSolution {
 
 
 
+## 279. 完全平方数 Perfect Squares
+
+
+
+### 题目
+
+[中等](https://leetcode.cn/problems/perfect-squares/)
+
+> 给你一个整数 `n` ，返回 *和为 `n` 的完全平方数的最少数量* 。
+>
+> **完全平方数** 是一个整数，其值等于另一个整数的平方；换句话说，其值等于一个整数自乘的积。例如，`1`、`4`、`9` 和 `16` 都是完全平方数，而 `3` 和 `11` 不是。
+>
+> **示例 1：**
+>
+> ```
+> 输入：n = 12
+> 输出：3 
+> 解释：12 = 4 + 4 + 4
+> ```
+>
+> **示例 2：**
+>
+> ```
+> 输入：n = 13
+> 输出：2
+> 解释：13 = 4 + 9
+> ```
+>
+> **提示：**
+>
+> - `1 <= n <= 104`
+>
+> ------
+>
+> 通过次数 796,575/1.2M
+>
+> 通过率 68.3%
+
+
+
+### 思路
+
+1. 动态规划
+
+   定义 L = { k<sup>2</sup> | k ∈ Z<sup>+</sup> , k<sup>2</sup> <= n}
+
+   定义 f(n) 为组成整数 n 的完全平方数的最小数量
+
+   那么在已知 f(1) 到 f(n-1) 的值的情况下，f(n) = min{ f(p) + f(q) }，使得 n = p + q
+
+   因此可考虑以下算法：
+
+   定义数组 f 存储 f(1) 到 f(n) 的值，使 f(L) = 1
+
+   如果 f(n) == 1，返回 f(n)
+
+   遍历 f ，当 f(i) != 0 时，遍历 p 从 1 到 i/2（向下取整），q = i - p，找到 min{ f(p) + f(q) } 赋值给 f(i)
+
+   返回 f(n)
+
+   时间复杂度为 O(n<sup>2</sup>)
+
+2. 优化的动态规划
+
+   考虑 f(n) = min{ f(p) + f(q) }，那么仅需考虑 p ∈ { t<sup>2</sup> | t ∈ Z<sup>+</sup> , t<sup>2</sup> <= i }
+
+   这是因为 n 必然由若干个 t<sup>2</sup> 组成
+
+   时间复杂度 O(n<sup>1.5</sup>)
+
+3. 数学方法
+
+   尚未想到
+
+
+
+### 动态规划
+
+#### 代码
+
+```java
+class Solution {
+    public int numSquares(int n) {
+        int[] f = new int[n + 1];
+        /// 使 f(k^2) = 1
+        for (int k = 1; ; k++) {
+            int u = k * k;
+            if (u > n) break;
+            f[u] = 1;
+        }
+        if (f[n] > 0) return f[n];
+        /// 动态规划
+        for (int i = 1; i <= n; i++) {
+            if (f[i] != 0) continue;
+            int min = Integer.MAX_VALUE;
+            for (int p = 1; p <= i / 2; p++) {
+                min = Math.min(min, f[p] + f[i - p]);
+            }
+            f[i] = min;
+        }
+        return f[n];
+    }
+}
+```
+
+#### 结果
+
+通过
+
+用时1073ms
+
+击败5.00%
+
+
+
+### 优化的动态规划
+
+#### 代码
+
+```java
+class AdvancedSolution {
+    public int numSquares(int n) {
+        int[] f = new int[n + 1];
+        /// 使 f(k^2) = 1
+        for (int k = 1; ; k++) {
+            int u = k * k;
+            if (u > n) break;
+            f[u] = 1;
+        }
+        if (f[n] > 0) return f[n];
+        /// 动态规划
+        for (int i = 1; i <= n; i++) {
+            if (f[i] != 0) continue;
+            int min = Integer.MAX_VALUE;
+            for (int k = 1; ; k++) {
+                int p = k * k;
+                if(p > i) break;
+                min = Math.min(min, f[p] + f[i - p]);
+            }
+            f[i] = min;
+        }
+        return f[n];
+    }
+}
+```
+
+#### 结果
+
+通过
+
+用时26ms
+
+击败80.14%
+
+
+
+
+
 ## 438. 找到字符串中所有字母异位词 Find All Anagrams in a String
 
 
