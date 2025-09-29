@@ -2496,6 +2496,130 @@ class AdvancedSolution {
 
 
 
+## 322. 零钱兑换 Coin Change
+
+
+
+### 题目
+
+[中等](https://leetcode.cn/problems/coin-change/)
+
+> 给你一个整数数组 `coins` ，表示不同面额的硬币；以及一个整数 `amount` ，表示总金额。
+>
+> 计算并返回可以凑成总金额所需的 **最少的硬币个数** 。如果没有任何一种硬币组合能组成总金额，返回 `-1` 。
+>
+> 你可以认为每种硬币的数量是无限的。
+>
+> **示例 1：**
+>
+> ```
+> 输入：coins = [1, 2, 5], amount = 11
+> 输出：3 
+> 解释：11 = 5 + 5 + 1
+> ```
+>
+> **示例 2：**
+>
+> ```
+> 输入：coins = [2], amount = 3
+> 输出：-1
+> ```
+>
+> **示例 3：**
+>
+> ```
+> 输入：coins = [1], amount = 0
+> 输出：0
+> ```
+>
+> **提示：**
+>
+> - `1 <= coins.length <= 12`
+> - `1 <= coins[i] <= 231 - 1`
+> - `0 <= amount <= 104`
+>
+> ------
+>
+> 通过次数 1,197,627/2.3M
+>
+> 通过率 51.8%
+
+
+
+### 思路
+
+1. 动态规划
+
+   考虑 coins 数组的所有元素 c<sub>0</sub> 到 c<sub>m-1</sub> （从小到大排序）以及 amount 的值 n
+
+   定义 f(n) 为组成金额 n 的最少硬币个数（n >= 0），当无法组成金额 n 时，f(n) = -1
+
+   特别的，f(0) = 0
+
+   如果 f(n) != -1，那么 n 中必然包含一个 c<sub>i</sub> ，因此考虑 f(n) 的值可为 f(n - c<sub>i</sub>) + 1
+
+   因此 f(n) = min{ f(n - c<sub>i</sub>) + 1 }，0 <= i <= m - 1
+
+   那么考虑以下算法：
+
+   定义数组 f[0 ~ n]，遍历 c<sub>i</sub> 使得 f[c<sub>i</sub>] = 1，f[0] = 0
+
+   遍历 p 从 1 到 n，当 f[p] != 1 时
+
+   - 遍历 c<sub>i</sub> < p，计算 f[p - c<sub>i</sub>] + 1 的最小值（除了 f[p - c<sub>i</sub>] == -1），赋给 f[p]
+   - 如果 p < c<sub>0</sub>，则 f[p] = -1
+   - 如果所有 f[p - c<sub>i</sub>] == -1，则 f[p] = -1
+
+   返回 f[n]
+
+   时间复杂度为 O(mn)
+
+   由于 m 很小（不超过12），该算法可视为 O(n)
+
+   如果考虑 coins 需要排序，时间复杂度为 O(mlogm + mn)
+
+
+
+### 动态规划
+
+#### 代码
+
+```java
+class Solution {
+    public int coinChange(int[] coins, int amount) {
+        Arrays.sort(coins);
+        /// 动态规划数组
+        int[] f = new int[amount + 1];
+        for (int c : coins)
+            if (c <= amount) f[c] = 1;
+        for (int p = 1; p <= amount; p++) {
+            if (f[p] > 0) continue;
+            int min = Integer.MAX_VALUE;
+            for (int i = 0; i < coins.length; i++) {
+                if (p <= coins[i]) break;
+                if (f[p - coins[i]] == -1) continue;
+                min = Math.min(min, f[p - coins[i]] + 1);
+            }
+            if (min == Integer.MAX_VALUE) f[p] = -1;
+            else f[p] = min;
+        }
+        return f[amount];
+    }
+}
+```
+
+#### 结果
+
+通过
+
+用时22ms
+
+击败14.31%
+
+
+
+
+
 ## 438. 找到字符串中所有字母异位词 Find All Anagrams in a String
 
 
@@ -2916,6 +3040,8 @@ class AdvancedSolution2 {
   常与排序共用时为 O(nlogn)
 
 - 动态规划
+
+  - 状态转移方程
 
 - 贪心
 
