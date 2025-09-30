@@ -2496,6 +2496,110 @@ class AdvancedSolution {
 
 
 
+## 300. 最长递增子序列 Longest Increasing Subsequence
+
+
+
+### 题目
+
+[中等](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
+
+>给你一个整数数组 `nums` ，找到其中最长严格递增子序列的长度。
+>
+>**子序列** 是由数组派生而来的序列，删除（或不删除）数组中的元素而不改变其余元素的顺序。例如，`[3,6,2,7]` 是数组 `[0,3,1,6,2,2,7]` 的子序列。
+>
+>**示例 1：**
+>
+>```
+>输入：nums = [10,9,2,5,3,7,101,18]
+>输出：4
+>解释：最长递增子序列是 [2,3,7,101]，因此长度为 4 。
+>```
+>
+>**示例 2：**
+>
+>```
+>输入：nums = [0,1,0,3,2,3]
+>输出：4
+>```
+>
+>**示例 3：**
+>
+>```
+>输入：nums = [7,7,7,7,7,7,7]
+>输出：1
+>```
+>
+>**提示：**
+>
+>- `1 <= nums.length <= 2500`
+>- `-104 <= nums[i] <= 104`
+>
+>**进阶：**
+>
+>- 你能将算法的时间复杂度降低到 `O(n log(n))` 吗?
+>
+>------
+>
+>通过次数 1,346,212/2.3M
+>
+>通过率 57.9%
+
+
+
+### 思路
+
+1. 动态规划
+
+   对于输入数组 nums：m<sub>0</sub> 到 m<sub>n-1</sub>
+
+   考虑 f[i] 为 m<sub>i</sub> 为递增子序列最大值时的子序列最大长度
+
+   那么有状态转移方程
+
+   f[i] = max{ f[p] + 1 }，其中 p < i 且 m<sub>p</sub> < m<sub>i</sub>
+
+   如果对于一个 f[i] 不存在 p < i 且 m<sub>p</sub> < m<sub>i</sub>，那么 f[i] = 1
+
+   返回值即为 f[0] 到 f[n-1] 中的最大值
+
+   时间复杂度为 O(n<sup>2</sup>)
+
+
+
+### 动态规划
+
+#### 代码
+
+```java
+public class Solution {
+    public int lengthOfLIS(int[] nums) {
+        int[] f = new int[nums.length];
+        int result = 1;
+        for (int i = 0; i < nums.length; i++) {
+            int max = 1;
+            for (int p = 0; p < i; p++) {
+                if (nums[p] < nums[i])
+                    max = Math.max(max, f[p] + 1);
+            }
+            f[i] = max;
+            result = Math.max(result, max);
+        }
+        return result;
+    }
+}
+```
+
+#### 结果
+
+通过
+
+用时50ms
+
+击败78.03%
+
+
+
 ## 322. 零钱兑换 Coin Change
 
 

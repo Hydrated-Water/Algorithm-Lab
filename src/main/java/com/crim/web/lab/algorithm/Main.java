@@ -7,6 +7,6 @@ import com.crim.web.lab.algorithm.leetcode.problem.p76.MinimumWindowSubstring;
 
 public class Main {
     public static void main(String[] args) {
-        new PerfectSquares().run();
+        System.out.println("foobarbarfoo".matches("^(foo|bar)*$"));
     }
 }
