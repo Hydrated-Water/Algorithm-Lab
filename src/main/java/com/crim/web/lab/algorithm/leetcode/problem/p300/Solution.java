@@ -1,6 +1,6 @@
 package com.crim.web.lab.algorithm.leetcode.problem.p300;
 
-public class Solution {
+class Solution {
     public int lengthOfLIS(int[] nums) {
         int[] f = new int[nums.length];
         int result = 1;

@@ -2054,6 +2054,204 @@ class Solution {
 
 
 
+## 152. 乘积最大子数组 Maximum Product Subarray
+
+
+
+### 题目
+
+[中等]()
+
+> 给你一个整数数组 `nums` ，请你找出数组中乘积最大的非空连续 子数组（该子数组中至少包含一个数字），并返回该子数组所对应的乘积。
+>
+> 测试用例的答案是一个 **32-位** 整数。
+>
+> **示例 1:**
+>
+> ```
+> 输入: nums = [2,3,-2,4]
+> 输出: 6
+> 解释: 子数组 [2,3] 有最大乘积 6。
+> ```
+>
+> **示例 2:**
+>
+> ```
+> 输入: nums = [-2,0,-1]
+> 输出: 0
+> 解释: 结果不能为 2, 因为 [-2,-1] 不是子数组。
+> ```
+>
+> **提示:**
+>
+> - `1 <= nums.length <= 2 * 104`
+> - `-10 <= nums[i] <= 10`
+> - `nums` 的任何子数组的乘积都 **保证** 是一个 **32-位** 整数
+>
+> ------
+>
+> 通过次数 631,772/1.5M
+>
+> 通过率 43.4%
+
+
+
+### 思路
+
+1. 分治
+
+   > 考虑整数数组 nums 元素 a<sub>0</sub> 到 a<sub>n-1</sub> 有以下关键特性
+   >
+   > a * 0 = 0
+   >
+   > a * -1 = -1
+   >
+   > 假设 nums 数组全为正数
+   >
+   > ```
+   > [2, 3, 1, 4]
+   > ```
+   >
+   > 那么最大乘积即为所有元素的乘积
+   >
+   > 假设 nums 数组包含 0 元素和正数
+   >
+   > ```
+   > [2, 3, 0, 1, 4]
+   > ```
+   >
+   > 那么可以 0 元素分隔成多个子数组，最大乘积为 0 和多个子数组各自的元素乘积中的最大值
+   >
+   > 假设 nums 数组包含正数和负数，如果负数的个数为偶数
+   >
+   > ```
+   > [2, -3, 1, -4]
+   > ```
+   >
+   > 那么最大乘积即为所有元素的乘积
+   >
+   > 如果负数的个数为奇数，如：
+   >
+   > ```
+   > [2, -3, 1, -4, -5, 2]
+   > ```
+   >
+   > 那么以头尾第一个负数分隔得到两个子数组，最大乘积即为两个子数组各自的乘积的最大值：
+   >
+   > ```
+   > [2, -3, 1, -4, -5, 2]
+   > [2, -3, 1, -4] 乘积 = 24
+   >        [1, -4, -5, 2] 乘积 = 40
+   > ```
+   >
+   > 因此上述思路即以 0 元素分割原数组并各自求最大乘积
+   >
+   > 考虑以下边界条件：
+   >
+   > - nums 仅包含 0 元素
+   >
+   > - nums 不包含 0 元素
+   >
+   > - 一个分治求解的子数组中仅包含一个负数
+   >
+   >   ```
+   >   [-2]
+   >   ```
+   >
+   >   或
+   >
+   >   ```
+   >   [1, 2, 5, 1, -2, 2]
+   >   ```
+
+   时间复杂度 O(n)
+
+
+
+### 分治
+
+#### 代码
+
+```java
+class Solution {
+    
+    static int result;
+    
+    public int maxProduct(int[] nums) {
+        result = Integer.MIN_VALUE;
+        int negCount = 0;
+        int i = 0;
+        int start = 0;
+        int product = 1;
+        while (i < nums.length) {
+            if (nums[i] == 0) {
+                result = Math.max(result, 0);
+                process(nums, start, i - 1, negCount, product);
+                i++;
+                negCount = 0;
+                start = i;
+                product = 1;
+                continue;
+            }
+            product *= nums[i];
+            if (nums[i] < 0) negCount++;
+            i++;
+        }
+        process(nums, start, i - 1, negCount, product);
+        return result;
+    }
+    
+    void process(int[] nums, int start, int end, int negCount, int product) {
+        if (end - start < 0) return;
+        if (negCount % 2 == 0) {
+            result = Math.max(product, result);
+            return;
+        }
+        if (negCount == 1) {
+            if (end - start == 0) {
+                result = Math.max(result, product);
+                return;
+            }
+            int p = 1;
+            for (int i = start; i <= end; i++) {
+                if (nums[i] < 0) break;
+                p *= nums[i];
+            }
+            result = Math.max(result, p);
+            p = 1;
+            for (int i = end; i >= start; i--) {
+                if (nums[i] < 0) break;
+                p *= nums[i];
+            }
+            result = Math.max(result, p);
+            return;
+        }
+        int p = 1;
+        for (int i = start; i <= end; i++) {
+            p *= nums[i];
+            if (nums[i] < 0) break;
+        }
+        result = Math.max(result, product / p);
+        p = 1;
+        for (int i = end; i >= start; i--) {
+            p *= nums[i];
+            if (nums[i] < 0) break;
+        }
+        result = Math.max(result, product / p);
+    }
+}
+```
+
+#### 结果
+
+通过
+
+用时1ms
+
+击败97.75%
+
+
+
 ## 198. 打家劫舍 House Robber
 
 
@@ -3144,6 +3342,8 @@ class AdvancedSolution2 {
   常与排序共用时为 O(nlogn)
 
 - 动态规划
+
+  将大问题分解为相互重叠的子问题，并存储子问题的解来避免重复计算
 
   - 状态转移方程
 
