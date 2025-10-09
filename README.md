@@ -1502,6 +1502,64 @@ class Solution {
 
 
 
+## 75. 颜色分类 Sort Colors
+
+
+
+### 题目
+
+[中等](https://leetcode.cn/problems/sort-colors/description/)
+
+> 给定一个包含红色、白色和蓝色、共 `n` 个元素的数组 `nums` ，**[原地](https://baike.baidu.com/item/原地算法)** 对它们进行排序，使得相同颜色的元素相邻，并按照红色、白色、蓝色顺序排列。
+>
+> 我们使用整数 `0`、 `1` 和 `2` 分别表示红色、白色和蓝色。
+>
+> 必须在不使用库内置的 sort 函数的情况下解决这个问题。
+>
+> **示例 1：**
+>
+> ```
+> 输入：nums = [2,0,2,1,1,0]
+> 输出：[0,0,1,1,2,2]
+> ```
+>
+> **示例 2：**
+>
+> ```
+> 输入：nums = [2,0,1]
+> 输出：[0,1,2]
+> ```
+>
+> **提示：**
+>
+> - `n == nums.length`
+> - `1 <= n <= 300`
+> - `nums[i]` 为 `0`、`1` 或 `2`
+>
+> **进阶：**
+>
+> - 你能想出一个仅使用常数空间的一趟扫描算法吗？
+>
+> ------
+>
+> 通过次数 860,224/1.4M
+>
+> 通过率 63.2%
+
+
+
+### 思路
+
+1. 双指针
+
+   由于数组 nums 的元素只有 0、1、2 三种，假设存在某种时间复杂度为 O(n)，空间复杂度为 O(1) 的原地排序算法对其进行排序
+
+   考虑使用两个指针 p、q 分别表明数组头的已排序的 0 元素和数组尾的已排序的 2 元素，那么可以遍历数组所有元素，如果它是 0，则将其与 nums[p+1] 交换，并使 p 步进 1，如果它是2，则将其与 nums[q-1] 交换，并使 q 步进 -1
+
+
+
+
+
 ## 76. 最小覆盖子串 Minimum Window Substring
 
 
@@ -2917,6 +2975,114 @@ class Solution {
 用时22ms
 
 击败14.31%
+
+
+
+
+
+## 416. 分割等和子集 Partition Equal Subset Sum
+
+
+
+### 题目
+
+[中等](https://leetcode.cn/problems/partition-equal-subset-sum/description/)
+
+> 给你一个 **只包含正整数** 的 **非空** 数组 `nums` 。请你判断是否可以将这个数组分割成两个子集，使得两个子集的元素和相等。
+>
+> **示例 1：**
+>
+> ```
+> 输入：nums = [1,5,11,5]
+> 输出：true
+> 解释：数组可以分割成 [1, 5, 5] 和 [11] 。
+> ```
+>
+> **示例 2：**
+>
+> ```
+> 输入：nums = [1,2,3,5]
+> 输出：false
+> 解释：数组不能分割成两个元素和相等的子集。
+> ```
+>
+> **提示：**
+>
+> - `1 <= nums.length <= 200`
+> - `1 <= nums[i] <= 100`
+>
+> ------
+>
+> 通过次数 857,022/1.6M
+>
+> 通过率 53.8%
+
+
+
+### 思路
+
+1. 动态规划
+
+   （在01背包问题提示下得到以下思路）
+
+   动态规划的本质是避免子问题的重复计算
+
+   考虑一个长度 n 的 nums 数组，其所有元素和为 sum，那么将其分割成两个子集使得它们和相等，那么它们的和都是 tartget = sum / 2
+
+   因此题目转换为，寻找 nums 数组的任意子集 subs，使得 subs 的和为 target
+
+   对于每个 nums[i]，其均由“在 subs 中”和“不在 subs 中”两种状态，如果计算所有的子集，那么总共有 2<sup>n</sup> 个子集
+
+   注意到假设两个子集分别由元素下标 [1,2,...,p,q] 和 [1,2,...p,r] 组成，那么它们的和只存在 nums[q] 和 nums[r] 的差，即如果能存储部分子集的和，就能迅速计算其他子集的和
+
+   因此考虑以下算法：
+
+   1. 初始化布尔数组 b[0...target]，b[i] 的值即表明是否存在 nums 的子集的和为 i，并且 b[0] = true
+   2. 遍历 nums 数组使得 i 从 0 到 n-1
+   3. 对于每一个 nums[i]，遍历 b 数组使得 k 从 target - nums[i] 到 0
+   4. 如果 b[k] = true，那么使 b[k+nums[i]] = true，如果 k+nums[i] == target，返回 true
+   5. 如果 nums 数组未能使 b[target] == true，返回 false
+
+   时间复杂度为 O(n*target)
+
+
+
+### 动态规划
+
+#### 代码
+
+```java
+class Solution {
+    public boolean canPartition(int[] nums) {
+        int sum = 0;
+        for (int num : nums) {
+            sum += num;
+        }
+        if (sum % 2 == 1) return false;
+        
+        int target = sum / 2;
+        boolean[] dp = new boolean[target + 1];
+        dp[0] = true;
+        
+        for (int num : nums) {
+            for (int k = target - num; k >= 0; k--) {
+                if (dp[k]) dp[k + num] = true;
+            }
+            if (dp[target]) return true;
+        }
+        
+        return false;
+    }
+}
+```
+
+#### 结果
+
+通过
+
+用时13ms
+
+击败98.06%
 
 
 
